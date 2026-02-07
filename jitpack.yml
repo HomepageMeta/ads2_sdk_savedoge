@@ -1,0 +1,6 @@
+# 适配AGP 9.0.0的JitPack配置（必须指定Java 17）
+jdk:
+  - openjdk17
+# 自动编译指定Module的Release版aar
+install:
+  - ./gradlew :ads2_sdk_savedoge:assembleRelease
