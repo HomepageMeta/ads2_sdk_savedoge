@@ -1,6 +1,160 @@
-# 适配AGP 9.0.0的JitPack配置（必须指定Java 17）
+## 适配AGP 9.0.0的JitPack配置（必须指定Java 17）
+#jdk:
+#  - openjdk17
+## 自动编译指定Module的Release版aar
+#install:
+#  - ./gradlew :ads2_sdk_savedoge:assembleRelease
+
+
+# 适配AGP 9.0.0的JitPack完整配置
 jdk:
   - openjdk17
-# 自动编译指定Module的Release版aar
+
+# 第一步：编译Module的Release版aar
 install:
-  - ./gradlew :ads2_sdk_savedoge:assembleRelease
+  - ./gradlew :ads2_sdk_savedoge:assembleRelease --info
+
+# 第二步：复制aar到JitPack识别的Maven目录 + 生成pom.xml
+after_install:
+  # 1. 定义GAV坐标（替换成你的实际信息）
+  - GROUP_ID="com.github.646113969"
+  - ARTIFACT_ID="ads2_sdk_savedoge"
+  - VERSION="v1.0.2"
+
+  # 2. 创建Maven标准目录结构
+  - mkdir -p ~/.m2/repository/${GROUP_ID//.//}/${ARTIFACT_ID}/${VERSION}/
+
+  # 3. 复制本地编译好的aar到该目录
+  - cp ads2_sdk_savedoge/build/outputs/aar/ads2_sdk_savedoge-release.aar ~/.m2/repository/${GROUP_ID//.//}/${ARTIFACT_ID}/${VERSION}/${ARTIFACT_ID}-${VERSION}.aar
+
+  # 4. 生成pom.xml文件（包含所有依赖传递）
+  - |
+    cat > ~/.m2/repository/${GROUP_ID//.//}/${ARTIFACT_ID}/${VERSION}/${ARTIFACT_ID}-${VERSION}.pom << EOF
+    <?xml version="1.0" encoding="UTF-8"?>
+    <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+      <modelVersion>4.0.0</modelVersion>
+      <groupId>${GROUP_ID}</groupId>
+      <artifactId>${ARTIFACT_ID}</artifactId>
+      <version>${VERSION}</version>
+      <packaging>aar</packaging>
+      <!-- 依赖传递配置 -->
+      <dependencies>
+#        <!-- libs.xxx系列依赖 -->
+#        <dependency>
+#          <groupId>androidx.core</groupId>
+#          <artifactId>core-ktx</artifactId>
+#          <version>1.17.0</version>
+#          <scope>compile</scope>
+#        </dependency>
+#        <dependency>
+#          <groupId>androidx.appcompat</groupId>
+#          <artifactId>appcompat</artifactId>
+#          <version>1.6.1</version>
+#          <scope>compile</scope>
+#        </dependency>
+#        <dependency>
+#          <groupId>com.google.android.material</groupId>
+#          <artifactId>material</artifactId>
+#          <version>1.12.0</version>
+#          <scope>compile</scope>
+#        </dependency>
+#        <dependency>
+#          <groupId>junit</groupId>
+#          <artifactId>junit</artifactId>
+#          <version>4.13.2</version>
+#          <scope>test</scope>
+#        </dependency>
+#        <dependency>
+#          <groupId>androidx.test.ext</groupId>
+#          <artifactId>junit</artifactId>
+#          <version>1.1.5</version>
+#          <scope>androidTest</scope>
+#        </dependency>
+#        <dependency>
+#          <groupId>androidx.test.espresso</groupId>
+#          <artifactId>espresso-core</artifactId>
+#          <version>3.5.1</version>
+#          <scope>androidTest</scope>
+#        </dependency>
+
+        <!-- MonetizeCore Savedoge SDK -->
+        <dependency>
+          <groupId>com.monetize</groupId>
+          <artifactId>monetize-core-savedoge-sdk</artifactId>
+          <version>1.0.1</version>
+          <scope>compile</scope>
+        </dependency>
+
+        <!-- Ktor相关依赖 -->
+        <dependency>
+          <groupId>io.ktor</groupId>
+          <artifactId>ktor-client-core</artifactId>
+          <version>3.1.2</version>
+          <scope>compile</scope>
+        </dependency>
+        <dependency>
+          <groupId>io.ktor</groupId>
+          <artifactId>ktor-client-okhttp</artifactId>
+          <version>3.1.2</version>
+          <scope>compile</scope>
+        </dependency>
+        <dependency>
+          <groupId>io.ktor</groupId>
+          <artifactId>ktor-client-content-negotiation</artifactId>
+          <version>3.1.2</version>
+          <scope>compile</scope>
+        </dependency>
+        <dependency>
+          <groupId>io.ktor</groupId>
+          <artifactId>ktor-serialization-kotlinx-json</artifactId>
+          <version>3.1.2</version>
+          <scope>compile</scope>
+        </dependency>
+
+        <!-- 其他运行时依赖 -->
+        <dependency>
+          <groupId>dev.whyoleg.cryptography</groupId>
+          <artifactId>cryptography-provider-jdk</artifactId>
+          <version>0.4.0</version>
+          <scope>compile</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.jetbrains.kotlinx</groupId>
+          <artifactId>kotlinx-datetime</artifactId>
+          <version>0.6.1</version>
+          <scope>compile</scope>
+        </dependency>
+        <dependency>
+          <groupId>com.squareup.okio</groupId>
+          <artifactId>okio</artifactId>
+          <version>3.9.1</version>
+          <scope>compile</scope>
+        </dependency>
+        <dependency>
+          <groupId>androidx.webkit</groupId>
+          <artifactId>webkit</artifactId>
+          <version>1.15.0</version>
+          <scope>compile</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.jetbrains.kotlinx</groupId>
+          <artifactId>kotlinx-serialization-json</artifactId>
+          <version>1.6.3</version>
+          <scope>compile</scope>
+        </dependency>
+
+        <!-- desugaring依赖 -->
+        <dependency>
+          <groupId>com.android.tools</groupId>
+          <artifactId>desugar_jdk_libs</artifactId>
+          <version>2.1.5</version>
+          <scope>compile</scope>
+        </dependency>
+      </dependencies>
+    </project>
+    EOF
+
+# 第三步：验证产物是否存在（可选）
+after_success:
+  - ls -la ~/.m2/repository/${GROUP_ID//.//}/${ARTIFACT_ID}/${VERSION}/
+  - echo "Artifacts copied successfully!"
