@@ -1,0 +1,55 @@
+plugins {
+    alias(libs.plugins.android.library)
+}
+
+android {
+    namespace 'com.xn.ads2.ads2_sdk_savedoge'
+    compileSdk {
+        version = release(36)
+    }
+
+    defaultConfig {
+        minSdk 24
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+
+dependencies {
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.appcompat
+    implementation libs.material
+    testImplementation libs.junit
+    androidTestImplementation libs.androidx.junit
+    androidTestImplementation libs.androidx.espresso.core
+
+    // 导⼊ MonetizeCore Savedoge SDK
+    implementation("com.monetize:monetize-core-savedoge-sdk:1.0.1")
+
+    // SDK 所需的运⾏时依赖
+    def ktorVersion = "3.1.2"
+    implementation("io.ktor:ktor-client-core:$ktorVersion")
+    implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+    implementation("dev.whyoleg.cryptography:cryptography-provider-jdk:0.4.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
+    implementation("com.squareup.okio:okio:3.9.1")
+    implementation("androidx.webkit:webkit:1.15.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+
+    // desugaring（⽀持 Java 8+ API）
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+}

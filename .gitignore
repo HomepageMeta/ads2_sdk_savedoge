@@ -1,0 +1,47 @@
+#*.iml
+#.gradle
+#/local.properties
+#/.idea/caches
+#/.idea/libraries
+#/.idea/modules.xml
+#/.idea/workspace.xml
+#/.idea/navEditor.xml
+#/.idea/assetWizardSettings.xml
+#.DS_Store
+#/build
+#/captures
+#.externalNativeBuild
+#.cxx
+#local.properties
+
+# Android Project .gitignore
+# 项目级忽略
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+*.apk
+*.ap_
+*.dex
+*.class
+# 排除Module的build目录（保留源码）
+*/build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/
+!**/src/test/
+# 保留必要的配置文件
+!.gitignore
+!build.gradle
+!settings.gradle
+!gradle.properties
+!*/build.gradle
