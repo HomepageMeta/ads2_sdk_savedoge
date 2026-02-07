@@ -4,12 +4,13 @@ plugins {
 
 android {
     namespace 'com.xn.ads2.ads2_sdk_savedoge'
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk 36
 
     defaultConfig {
         minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName "1.0.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
