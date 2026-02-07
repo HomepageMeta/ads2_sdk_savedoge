@@ -5,38 +5,46 @@
 #install:
 #  - ./gradlew :ads2_sdk_savedoge:assembleRelease
 
-
-# 强制指定JDK 17（解决核心版本问题）
-jdk:
-  - openjdk17
-
-# 关键：强制设置JAVA_HOME为JDK 17路径（JitPack的openjdk17安装路径固定）
-env:
-  JAVA_HOME: /home/jitpack/.sdkman/candidates/java/17.0.12-oracle
-  PATH: /home/jitpack/.sdkman/candidates/java/17.0.12-oracle/bin:$PATH
-
-# 禁用JitPack默认的publishToMavenLocal逻辑（解决警告）
+# 核心：先安装并激活JDK 17（解决AGP 9.0.0 + Gradle 9.1.0的版本要求）
 before_install:
-  - echo "org.gradle.java.home=/home/jitpack/.sdkman/candidates/java/17.0.12-oracle" >> gradle.properties
+  # 安装SDKMan（JDK管理工具）
+  - curl -s "https://get.sdkman.io" | bash
+  - source "$HOME/.sdkman/bin/sdkman-init.sh"
+  # 安装并激活JDK 17（指定稳定版本）
+  - sdk install java 17.0.12-oracle
+  - sdk use java 17.0.12-oracle
+  # 强制设置JAVA_HOME和PATH，确保全局使用JDK 17
+  - export JAVA_HOME="$HOME/.sdkman/candidates/java/17.0.12-oracle"
+  - export PATH="$JAVA_HOME/bin:$PATH"
+  # 写入gradle.properties，强制Gradle使用JDK 17
+  - echo "org.gradle.java.home=$JAVA_HOME" >> gradle.properties
+  # 验证JDK版本（排查用）
+  - java -version
 
-# 第一步：编译Module的Release版aar（指定JDK 17）
+# 编译Module的Release版aar（禁用Daemon避免版本复用）
 install:
-  - ./gradlew :ads2_sdk_savedoge:assembleRelease --info -Dorg.gradle.java.home=/home/jitpack/.sdkman/candidates/java/17.0.12-oracle
+  - ./gradlew :ads2_sdk_savedoge:assembleRelease --info --no-daemon
 
-# 第二步：复制aar到JitPack识别的Maven目录 + 生成pom.xml
+# 复制aar到JitPack识别的目录 + 生成标准pom.xml
 after_install:
-  # 1. 定义GAV坐标
+  # 定义GAV坐标（严格匹配你的项目）
   - GROUP_ID="com.github.zc"
   - ARTIFACT_ID="ads2_sdk_savedoge"
   - VERSION="v1.0.3"
 
-  # 2. 创建Maven标准目录结构
+  # 创建Maven标准目录结构
   - mkdir -p ~/.m2/repository/${GROUP_ID//.//}/${ARTIFACT_ID}/${VERSION}/
 
-  # 3. 复制本地编译好的aar到该目录
+  # 验证aar是否存在，不存在则终止构建（避免空文件）
+  - if [ ! -f "ads2_sdk_savedoge/build/outputs/aar/ads2_sdk_savedoge-release.aar" ]; then
+    echo "ERROR: aar file not found in ads2_sdk_savedoge/build/outputs/aar/";
+    exit 1;
+    fi
+
+  # 复制aar文件到Maven目录
   - cp ads2_sdk_savedoge/build/outputs/aar/ads2_sdk_savedoge-release.aar ~/.m2/repository/${GROUP_ID//.//}/${ARTIFACT_ID}/${VERSION}/${ARTIFACT_ID}-${VERSION}.aar
 
-  # 4. 生成pom.xml文件（包含所有依赖传递）
+  # 生成pom.xml（包含所有依赖传递，格式无错误）
   - |
     cat > ~/.m2/repository/${GROUP_ID//.//}/${ARTIFACT_ID}/${VERSION}/${ARTIFACT_ID}-${VERSION}.pom << EOF
     <?xml version="1.0" encoding="UTF-8"?>
@@ -46,9 +54,8 @@ after_install:
       <artifactId>${ARTIFACT_ID}</artifactId>
       <version>${VERSION}</version>
       <packaging>aar</packaging>
-      <!-- 依赖传递配置 -->
       <dependencies>
-#        <!-- libs.xxx系列依赖 -->
+#        <!-- androidx核心依赖 -->
 #        <dependency>
 #          <groupId>androidx.core</groupId>
 #          <artifactId>core-ktx</artifactId>
@@ -67,6 +74,7 @@ after_install:
 #          <version>1.12.0</version>
 #          <scope>compile</scope>
 #        </dependency>
+#        <!-- 测试依赖 -->
 #        <dependency>
 #          <groupId>junit</groupId>
 #          <artifactId>junit</artifactId>
@@ -85,16 +93,14 @@ after_install:
 #          <version>3.5.1</version>
 #          <scope>androidTest</scope>
 #        </dependency>
-
-        <!-- MonetizeCore Savedoge SDK -->
+        <!-- Monetize SDK核心 -->
         <dependency>
           <groupId>com.monetize</groupId>
           <artifactId>monetize-core-savedoge-sdk</artifactId>
           <version>1.0.1</version>
           <scope>compile</scope>
         </dependency>
-
-        <!-- Ktor相关依赖 -->
+        <!-- Ktor网络依赖（3.1.2） -->
         <dependency>
           <groupId>io.ktor</groupId>
           <artifactId>ktor-client-core</artifactId>
@@ -119,7 +125,6 @@ after_install:
           <version>3.1.2</version>
           <scope>compile</scope>
         </dependency>
-
         <!-- 其他运行时依赖 -->
         <dependency>
           <groupId>dev.whyoleg.cryptography</groupId>
@@ -151,8 +156,7 @@ after_install:
           <version>1.6.3</version>
           <scope>compile</scope>
         </dependency>
-
-        <!-- desugaring依赖 -->
+        <!-- desugaring依赖（Java 8+兼容） -->
         <dependency>
           <groupId>com.android.tools</groupId>
           <artifactId>desugar_jdk_libs</artifactId>
@@ -163,7 +167,8 @@ after_install:
     </project>
     EOF
 
-# 第三步：验证产物是否存在（可选）
+# 验证产物是否生成成功（可选，便于排查）
 after_success:
   - ls -la ~/.m2/repository/${GROUP_ID//.//}/${ARTIFACT_ID}/${VERSION}/
-  - echo "Artifacts copied successfully! JDK version: $(java -version)"
+  - echo "✅ Build success! Artifacts copied to Maven repo."
+  - echo "✅ JDK Version: $(java -version 2>&1 | head -1)"
