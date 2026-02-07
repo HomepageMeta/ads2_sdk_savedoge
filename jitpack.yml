@@ -6,18 +6,27 @@
 #  - ./gradlew :ads2_sdk_savedoge:assembleRelease
 
 
-# 适配AGP 9.0.0的JitPack完整配置
+# 强制指定JDK 17（解决核心版本问题）
 jdk:
   - openjdk17
 
-# 第一步：编译Module的Release版aar
+# 关键：强制设置JAVA_HOME为JDK 17路径（JitPack的openjdk17安装路径固定）
+env:
+  JAVA_HOME: /home/jitpack/.sdkman/candidates/java/17.0.12-oracle
+  PATH: /home/jitpack/.sdkman/candidates/java/17.0.12-oracle/bin:$PATH
+
+# 禁用JitPack默认的publishToMavenLocal逻辑（解决警告）
+before_install:
+  - echo "org.gradle.java.home=/home/jitpack/.sdkman/candidates/java/17.0.12-oracle" >> gradle.properties
+
+# 第一步：编译Module的Release版aar（指定JDK 17）
 install:
-  - ./gradlew :ads2_sdk_savedoge:assembleRelease --info
+  - ./gradlew :ads2_sdk_savedoge:assembleRelease --info -Dorg.gradle.java.home=/home/jitpack/.sdkman/candidates/java/17.0.12-oracle
 
 # 第二步：复制aar到JitPack识别的Maven目录 + 生成pom.xml
 after_install:
-  # 1. 定义GAV坐标（替换成你的实际信息）
-  - GROUP_ID="com.github.646113969"
+  # 1. 定义GAV坐标
+  - GROUP_ID="com.github.zc"
   - ARTIFACT_ID="ads2_sdk_savedoge"
   - VERSION="v1.0.2"
 
@@ -43,7 +52,7 @@ after_install:
 #        <dependency>
 #          <groupId>androidx.core</groupId>
 #          <artifactId>core-ktx</artifactId>
-#          <version>1.17.0</version>
+#          <version>1.12.0</version>
 #          <scope>compile</scope>
 #        </dependency>
 #        <dependency>
@@ -157,4 +166,4 @@ after_install:
 # 第三步：验证产物是否存在（可选）
 after_success:
   - ls -la ~/.m2/repository/${GROUP_ID//.//}/${ARTIFACT_ID}/${VERSION}/
-  - echo "Artifacts copied successfully!"
+  - echo "Artifacts copied successfully! JDK version: $(java -version)"
