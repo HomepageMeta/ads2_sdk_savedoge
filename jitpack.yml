@@ -28,7 +28,7 @@ after_install:
   # 1. 定义GAV坐标
   - GROUP_ID="com.github.zc"
   - ARTIFACT_ID="ads2_sdk_savedoge"
-  - VERSION="v1.0.2"
+  - VERSION="v1.0.3"
 
   # 2. 创建Maven标准目录结构
   - mkdir -p ~/.m2/repository/${GROUP_ID//.//}/${ARTIFACT_ID}/${VERSION}/
