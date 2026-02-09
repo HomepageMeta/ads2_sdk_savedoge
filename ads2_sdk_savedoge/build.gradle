@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
+    id 'maven-publish' // 必须引入这个插件才能使用 publishing() 方法
 }
 
 android {
@@ -23,8 +24,16 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // AGP 9.0.0 中，发布组件需要明确配置
+    publishing {
+        singleVariant("release") {
+            withJavadocJar() // 生成 Javadoc 包（JitPack 构建需要）
+            withSourcesJar() // 生成源码包（可选，方便其他开发者查看源码）
+        }
     }
 }
 
@@ -53,4 +62,20 @@ dependencies {
 
     // desugaring（⽀持 Java 8+ API）
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+}
+
+// 发布信息配置（AGP 9.0.0 推荐 afterEvaluate 包裹）
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+
+                // 核心发布信息（其他开发者依赖时用）
+                groupId = "com.github.xn" // 例如 com.github.zhangsan
+                artifactId = "ads2_sdk_savedoge" // 库名称，自定义
+                version = "1.0.0" // 版本号，和 GitHub Tag 一致
+            }
+        }
+    }
 }
