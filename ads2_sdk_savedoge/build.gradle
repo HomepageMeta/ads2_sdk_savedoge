@@ -74,7 +74,17 @@ afterEvaluate {
                 // 核心发布信息（其他开发者依赖时用）
                 groupId = "com.github.xn" // 例如 com.github.zhangsan
                 artifactId = "ads2_sdk_savedoge" // 库名称，自定义
-                version = "1.0.0" // 版本号，和 GitHub Tag 一致
+                version = "v1.0.0" // 版本号，和 GitHub Tag 一致
+
+                // 补充：显式指定构件生成路径（可选，但能避免路径问题）
+                artifact("$buildDir/outputs/aar/ads2_sdk_savedoge-release.aar")
+            }
+        }
+
+        // 可选：指定发布仓库（本地仓库，JitPack 会读取）
+        repositories {
+            maven {
+                url = uri("$buildDir/repo")
             }
         }
     }
